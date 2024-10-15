@@ -8,4 +8,4 @@
 4. Estruturas de Repetição
 5. Listas
 6. Inputs do usuário
- 
+7. Import time para melhor experiência do Usuário
