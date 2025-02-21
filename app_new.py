@@ -8,51 +8,66 @@ VALOR_LIMITE_SAQUE = 500
 AGENCIA = "0001"
 num_conta = 0
 
-def sacar(*usuario):#funciona
+def sacar(*, usuarios, contas):#funciona
+    global VALOR_LIMITE_SAQUE, QTD_LIMITE_SAQUE
     #receber os argumentos por nome saldo = saldo
     while True: 
-        conta = input("Informe o número da conta que deseja fazer o depósito: ")
+        conta = input("Informe o número da conta que deseja fazer o saque: ")
         if conta.lower() == 'x':
             print("Operação cancelada.")
             return 
-        for pessoa in usuario:
-            if pessoa['Número da Conta'] == conta:
-                while True:
-                    try:
-                        print(f"Esta conta está associada à(ao) {pessoa['nome']} dono(a) do CPF {pessoa['cpf']}")
-                        valor = float(input("Informe o valor que deseja adicionar à sua conta: "))
-                        if valor <= 0:
-                            print("Informe um valor válido para depósito.")
-                        else:
-                            pessoa['Saldo'] = pessoa['Saldo'] - valor
-                            pessoa['Extrato'].append(f"Saque no valor de: -{valor:.2f}")
-                            print("Depósito realizado com sucesso!")
-                            return
-                    except ValueError:
-                        print("Por favor, informe um número válido.")
+        for info_conta in contas:
+            if info_conta['Número da Conta'] == int(conta):
+                cpf_conta = info_conta['cpf']  # Obtém o CPF da conta encontrada
+                for usuario in usuarios:
+                    if usuario['cpf'] == cpf_conta:
+                        print(f"Esta conta está associada a {usuario['nome']} dono(a) do CPF {usuario['cpf']}")
+                        while True:
+                            try:
+                                valor = float(input("Informe o valor que deseja retirar da sua conta: "))
+                                if valor <= 0:
+                                    print("Informe um valor válido para Saque.")
+                                elif valor > VALOR_LIMITE_SAQUE:
+                                    print("Saque maior do que o valor estipulado")
+                                    return
+                                elif info_conta['Vezes Sacadas'] > QTD_LIMITE_SAQUE:
+                                    print("Limite de saque diário atingido, volte amanhã.")
+                                else:
+                                    info_conta['Saldo'] -= valor
+                                    info_conta['Vezes Sacadas'] += 1
+                                    info_conta['Extrato'].append(f"Saque no valor de: -{valor:.2f}")
+                                    print("Saque realizado com sucesso!")
+                                    return
+                            except ValueError:
+                                print("Por favor, informe um número válido.")        
         print("Essa conta não existe, tente de novo.")
 
-def deposito(usuario, /):#funciona
+def deposito(contas, usuarios, /): #funciona
     while True: 
         conta = input("Informe o número da conta que deseja fazer o depósito: ")
         if conta.lower() == 'x':
             print("Operação cancelada.")
             return 
-        for pessoa in usuario:
-            if pessoa['Número da Conta'] == conta:
-                while True:
-                    try:
-                        print(f"Esta conta está associada à(ao) {pessoa['nome']} dono(a) do CPF {pessoa['cpf']}")
-                        valor = float(input("Informe o valor que deseja adicionar à sua conta: "))
-                        if valor <= 0:
-                            print("Informe um valor válido para depósito.")
-                        else:
-                            pessoa['Saldo'] += valor
-                            pessoa['Extrato'].append(f"Depósito no valor de: +{valor:.2f}")
-                            print("Depósito realizado com sucesso!")
-                            return
-                    except ValueError:
-                        print("Por favor, informe um número válido.")
+
+        for info_conta in contas:
+            if info_conta['Número da Conta'] == int(conta):
+                cpf_conta = info_conta['cpf']  # Obtém o CPF da conta encontrada
+                
+                for usuario in usuarios:
+                    if usuario['cpf'] == cpf_conta:
+                        print(f"Esta conta está associada a {usuario['nome']} dono(a) do CPF {usuario['cpf']}")
+                        while True:
+                            try:
+                                valor = int(input("Informe o valor que deseja adicionar à sua conta: "))
+                                if valor <= 0:
+                                    print("Informe um valor válido para depósito.")
+                                else:
+                                    info_conta['Saldo'] += valor
+                                    info_conta['Extrato'].append(f"Depósito no valor de: +{valor:.2f}")
+                                    print("Depósito realizado com sucesso!")
+                                    return
+                            except ValueError:
+                                print("Por favor, informe um número válido.")        
         print("Essa conta não existe, tente de novo.")
 
 def extrato(saldo,/,*,extrato):
@@ -126,10 +141,10 @@ def criar_conta(usuarios,contas,contas_ex,agencia):#funciona
                 contas_ex.remove(conta)
         else:
             num_conta +=1
-        nova_conta = ({"Nome":pessoa['nome'],'cpf':cpf,"Agência":agencia,'Saldo':0,"Vezes Sacadas":0,"Número da Conta": num_conta,"Extrato":[]})
+        nova_conta = ({'Nome':pessoa['nome'],'cpf':cpf,'Agência':agencia,'Saldo':0,'Vezes Sacadas':0,'Número da Conta': num_conta,'Extrato':[]})
         contas.append(nova_conta)
         print("conta criada com sucesso")
-        print(f"Conta no nome de: {nova_conta["Nome"]}\n de número: {nova_conta["Número da Conta"]}\n da Agência de número: {nova_conta["Agência"]}")
+        print(f"Conta no nome de: {nova_conta['Nome']}\n de número: {nova_conta['Número da Conta']}\n da Agência de número: {nova_conta['Agência']}")
     except ValueError:
         print("Argumentos Inválidos")
 
@@ -173,6 +188,7 @@ def listar_usuarios(usuarios):#funciona
         print(f"Nome: {usuario['nome']} do CPF: {usuario['cpf']}\nque mora no endereço: {usuario['endereco']} que nasceu na data: {usuario['nascimento']}")
 
 def layout():
+
     while True:
         tela_inicial = """
         -- Escolha suas opções --
@@ -201,10 +217,10 @@ def layout():
             listar_usuarios(usuario)
         elif escolha == '5':
             print("No inicio do processo, pressione X para retornar ao menu principal\n ao dar continuidade com o processo, o mesmo não poderá ser interrompido.")
-            sacar(usuario=usuario)
+            sacar(usuarios=usuario,contas=conta)
         elif escolha == '6':
             print("No inicio do processo, pressione X para retornar ao menu principal\n ao dar continuidade com o processo, o mesmo não poderá ser interrompido.")
-            deposito(usuario)
+            deposito(conta,usuario)
         elif escolha == '7':
             print("No inicio do processo, pressione X para retornar ao menu principal\n ao dar continuidade com o processo, o mesmo não poderá ser interrompido.")
 
